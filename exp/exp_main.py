@@ -120,6 +120,7 @@ class Exp_Main(Exp_Basic):
         if self.args.use_amp:
             scaler = torch.cuda.amp.GradScaler()
 
+        losses = []
         for epoch in range(self.args.train_epochs):
             iter_count = 0
             train_loss = []
@@ -163,6 +164,11 @@ class Exp_Main(Exp_Basic):
 
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
+            losses.append({'epoch': epoch + 1,
+                           'train_steps': train_steps,
+                           'train_loss': train_loss,
+                           'validation_loss': vali_loss,
+                           'test_loss': test_loss})
             early_stopping(vali_loss, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
@@ -173,7 +179,7 @@ class Exp_Main(Exp_Basic):
         best_model_path = path + '/' + 'checkpoint.pth'
         self.model.load_state_dict(torch.load(best_model_path))
 
-        return
+        return losses
 
     def test(self, setting, test=0):
         test_data, test_loader = self._get_data(flag='test')
@@ -237,7 +243,7 @@ class Exp_Main(Exp_Basic):
         np.save(folder_path + 'pred.npy', preds)
         np.save(folder_path + 'true.npy', trues)
 
-        return
+        return {'mae':mae, 'mse':mse, 'rmse':rmse, 'mape': mape, 'mspe': mspe}
 
     def predict(self, setting, load=False):
         pred_data, pred_loader = self._get_data(flag='pred')

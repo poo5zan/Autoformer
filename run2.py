@@ -13,13 +13,21 @@ import torch
 import matplotlib.pyplot as plt 
 import numpy as np
 import matplotlib
+import shutil
 
 fix_seed = 2021 
 random.seed(fix_seed)
 torch.manual_seed(fix_seed)
 np.random.seed(fix_seed)
 
+def remove_directory(dir_path):
+    if os.path.exists(dir_path):
+        print('removing directory ', dir_path)
+        shutil.rmtree(dir_path)
+
 def run_experiment(args: dotdict):
+    remove_directory('./checkpoints/')
+    remove_directory('./results/') 
     args.des = 'test'
     args.dropout = 0.05
     args.num_workers = 0
@@ -33,7 +41,6 @@ def run_experiment(args: dotdict):
     args.bucket_size = 4
     args.n_hashes = 4
     args.is_trainging = True
-    
     args.seq_len = 96
     args.label_len = 48
     args.pred_len = 24
@@ -41,13 +48,10 @@ def run_experiment(args: dotdict):
     args.d_layers = 1
     args.n_heads = 8
     args.factor = 1
-    
     args.d_model = 512
     args.des = 'Exp'
     args.itr = 1
     args.d_ff = 2048
-    args.moving_avg = 25
-    args.factor = 1
     args.distil = True
     args.output_attention = False
     args.patience= 3
@@ -57,6 +61,9 @@ def run_experiment(args: dotdict):
     args.use_amp = False
     args.loss = 'mse'
 
+    # new configs
+    args.moving_avg = 25
+
     print('Args in experiment:')
     print(args)
 
@@ -64,6 +71,8 @@ def run_experiment(args: dotdict):
 
     # os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
+    error_metrics = {}
+    losses = None
     for ii in range(args.itr):#itr就是实验次数可不是epoch，parser.add_argument('--itr', type=int, default=2, help='experiments times')
         # setting record of experiments
         setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
@@ -85,25 +94,25 @@ def run_experiment(args: dotdict):
             args.des, ii)
 
         exp = Exp(args)  # set experiments
-        print(1)
+        
         print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-        exp.train(setting)#setting是用来保存模型的名字用的，很细节
-        print(2)
+        losses = exp.train(setting)#setting是用来保存模型的名字用的，很细节
+        
         print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-        exp.test(setting)
+        error_metrics = exp.test(setting)
         # torch.cuda.empty_cache()
-        print(3)
+        # print(3)
+        print('end one iteration')
 
     # custom data: xxx.csv
     # data features: ['date', ...(other features), target feature]
 
     # we take ETTh2 as an example #模仿informer 的 colab example的custom_dataset与predict部分
-    import pandas as pd
+    # import pandas as pd
     # exp.args.root_path = './dataset/ETT-small/'
     # exp.args.data_path = 'ETTh2.csv'
 
-    df = pd.read_csv(os.path.join(args.root_path, args.data_path))
-
+    # df = pd.read_csv(os.path.join(args.root_path, args.data_path))
 
     args.do_predict = True
     if args.do_predict:
@@ -112,22 +121,68 @@ def run_experiment(args: dotdict):
         # torch.cuda.empty_cache()
         # print(prediction.shape)
 
+    return error_metrics, losses
+
 args = dotdict()
+args.learning_rate = 0.0001
+args.train_epochs = 10
 args.root_path = '/Users/pujanmaharjan/uni adelaide/research project/Informer/dataset/'
-args.target = 'stock_0_y'
-args.data_path ='stock_data_tcn_targets.csv' 
-args.model_id='stock_data_tcn_targets'
 args.model = 'Autoformer'
 args.data = 'custom'
-args.features = 'M'
-args.learning_rate = 0.0001
-args.train_epochs = 2
-feature_count = len(pd.read_csv(os.path.join(args.root_path, args.data_path)).columns) - 1
-args.enc_in = feature_count
-args.dec_in = feature_count
-args.c_out = feature_count
-run_experiment(args)
 
+run_1 = False
+run_2 = True
+run_3= False
+
+error_metrics_all = []
+losses_all = []
+
+# run 1
+if run_1:
+    args.target = 'stock_0'
+    args.data_path ='stock_data_targets.csv' 
+    args.model_id='run_1'
+    args.features = 'M'
+    feature_count = len(pd.read_csv(os.path.join(args.root_path, args.data_path)).columns) - 1
+    args.enc_in = feature_count
+    args.dec_in = feature_count
+    args.c_out = feature_count
+    error_metrics_run_1, losses_run_1 = run_experiment(args)
+    error_metrics_all.append(error_metrics_run_1)
+    losses_all.append(losses_run_1)
+
+# run 2
+if run_2:
+    args.target = 'stock_0_y'
+    args.data_path ='stock_data_tcn_targets.csv' 
+    args.model_id='run_2'
+    args.features = 'M'
+    feature_count = len(pd.read_csv(os.path.join(args.root_path, args.data_path)).columns) - 1
+    args.enc_in = feature_count
+    args.dec_in = feature_count
+    args.c_out = feature_count
+    error_metrics_run_2, losses_run_2 = run_experiment(args)
+    error_metrics_all.append(error_metrics_run_2)
+    losses_all.append(losses_run_2)
+
+
+# run 3
+if run_3:
+    args.data_path = 'stock_0_features.csv' #'output.csv' # data file
+    args.target = 'target' # target feature in S or MS task
+    args.features = 'MS'
+    args.model_id='run_3'
+    feature_count = len(pd.read_csv(os.path.join(args.root_path, args.data_path)).columns) - 1
+    args.enc_in = feature_count
+    args.dec_in = feature_count
+    args.c_out = 1
+    error_metrics_run_3, losses_run_3 = run_experiment(args)
+    error_metrics_all.append(error_metrics_run_3)
+    losses_all.append(losses_run_3)
+
+print('error metrics all ', error_metrics_all)
+error_metrics_df = pd.DataFrame(error_metrics_all)
+print(error_metrics_df)
 
 def plot_predictions(trues, preds, start_index, step, num_plots, setting):
         num_rows = num_plots // 3
@@ -214,5 +269,38 @@ preds = np.load('./results/'+setting+'/pred.npy')
 trues = np.load('./results/'+setting+'/true.npy')
 
 plot_predictions(trues, preds, start_index=0, step=50, num_plots=6, setting = setting)
+
+def drawplots(epochs, train_loss, validation_loss, test_loss,title):
+    plt.plot(epochs, train_loss, label="train")
+    plt.plot(epochs, validation_loss, label="validation")
+    plt.plot(epochs, test_loss, label="test")
+    plt.title(title)
+    plt.legend()
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.savefig('./dataset/' + title + '.png')
+    plt.show()
+
+def drawplot(epochs, losses, title):
+    plt.plot(epochs, losses)
+    plt.title(title)
+    plt.legend()
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.savefig('./dataset/' + title + '.png')
+    plt.show()
+
+# print(losses)
+first_loss = losses_all[0]
+print(first_loss)
+epochs = [f['epoch'] for f in first_loss]
+print(epochs)
+train_losses = [f['train_loss'] for f in first_loss]
+validation_losses = [f['validation_loss'] for f in first_loss]
+test_losses = [f['test_loss'] for f in first_loss]
+drawplots(epochs, train_losses, validation_losses, test_losses, 'Autoformer - Loss curves')
+drawplot(epochs, train_losses, 'Autoformer - Train loss')
+drawplot(epochs, validation_losses, 'Autoformer - Validation loss')
+drawplot(epochs, test_losses, 'Autoformer - Test loss')
 
 print('end')
