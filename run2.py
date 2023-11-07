@@ -10,9 +10,7 @@ import os
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import torch
-import matplotlib.pyplot as plt 
 import numpy as np
-import matplotlib
 import shutil
 
 fix_seed = 2021 
@@ -119,7 +117,7 @@ def run_experiment(args: dotdict):
         # torch.cuda.empty_cache()
         # print(prediction.shape)
 
-    return error_metrics, losses
+    return error_metrics, losses, setting
 
 args = dotdict()
 args.learning_rate = 0.0001
@@ -128,8 +126,8 @@ args.root_path = '/Users/pujanmaharjan/uni adelaide/research project/Informer/da
 args.model = 'Autoformer'
 args.data = 'custom'
 
-run_1 = True
-run_2 = False
+run_1 = False
+run_2 = True
 run_3= False
 
 error_metrics_all = []
@@ -145,7 +143,7 @@ if run_1:
     args.enc_in = feature_count
     args.dec_in = feature_count
     args.c_out = feature_count
-    error_metrics_run_1, losses_run_1 = run_experiment(args)
+    error_metrics_run_1, losses_run_1, setting = run_experiment(args)
     error_metrics_all.append(error_metrics_run_1)
     losses_all.append(losses_run_1)
 
@@ -159,7 +157,7 @@ if run_2:
     args.enc_in = feature_count
     args.dec_in = feature_count
     args.c_out = feature_count
-    error_metrics_run_2, losses_run_2 = run_experiment(args)
+    error_metrics_run_2, losses_run_2, setting = run_experiment(args)
     error_metrics_all.append(error_metrics_run_2)
     losses_all.append(losses_run_2)
 
@@ -174,13 +172,10 @@ if run_3:
     args.enc_in = feature_count
     args.dec_in = feature_count
     args.c_out = 1
-    error_metrics_run_3, losses_run_3 = run_experiment(args)
+    error_metrics_run_3, losses_run_3, setting = run_experiment(args)
     error_metrics_all.append(error_metrics_run_3)
     losses_all.append(losses_run_3)
 
-print('error metrics all ', error_metrics_all)
-error_metrics_df = pd.DataFrame(error_metrics_all)
-print(error_metrics_df)
 
 def plot_predictions(trues, preds, start_index, step, num_plots, setting):
         num_rows = num_plots // 3
@@ -251,17 +246,25 @@ def plot_graph(results_data_path):
 # results_path = './results/stock_data_tcn_targets_Autoformer_custom_ftM_sl96_ll48_pl24_dm512_nh8_el2_dl1_df2048_fc1_ebfixed_dtTrue_Exp_0'
 # plot_graph(results_path)
 # 
-search_dir = "./checkpoints/"
-dirs = os.listdir(search_dir)
-dir_list = []
-for d in dirs:
-    if d.lower() == '.ds_store':
-        continue
-    date_change = os.path.getmtime(search_dir + d)
-    dir_list.append({'directory_name': d, 'changed_date': date_change})
+# search_dir = "./checkpoints/"
+# dirs = os.listdir(search_dir)
+# dir_list = []
+# for d in dirs:
+#     if d.lower() == '.ds_store':
+#         continue
+#     date_change = os.path.getmtime(search_dir + d)
+#     dir_list.append({'directory_name': d, 'changed_date': date_change})
 
-setting = sorted(dir_list, key=lambda x: x['changed_date'], reverse=True)[0]['directory_name']
+# setting = sorted(dir_list, key=lambda x: x['changed_date'], reverse=True)[0]['directory_name']
 print('setting folder ', setting)
+
+print('error metrics all ', error_metrics_all)
+error_metrics_df = pd.DataFrame(error_metrics_all)
+print(error_metrics_df)
+error_metrics_df.to_csv("./results/" + setting + "/error_metrics.csv", index=False)
+
+losses_df = pd.DataFrame(losses_all[0])
+losses_df.to_csv("./results/" + setting + "/losses.csv", index=False)
 
 preds = np.load('./results/'+setting+'/pred.npy')
 trues = np.load('./results/'+setting+'/true.npy')
@@ -282,7 +285,6 @@ def drawplots(epochs, train_loss, validation_loss, test_loss,title,setting):
 def drawplot(epochs, losses, title, setting):
     plt.plot(epochs, losses)
     plt.title(title)
-    plt.legend()
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.savefig('./results/' + setting + "/" + title + '.png')

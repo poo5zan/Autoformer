@@ -157,7 +157,8 @@ class Exp_Main(Exp_Basic):
                     loss.backward()
                     model_optim.step()
 
-            print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
+            cost_time = time.time()-epoch_time
+            print("Epoch: {} cost time: {}".format(epoch + 1, cost_time))
             train_loss = np.average(train_loss)
             vali_loss = self.vali(vali_data, vali_loader, criterion)
             test_loss = self.vali(test_data, test_loader, criterion)
@@ -168,7 +169,8 @@ class Exp_Main(Exp_Basic):
                            'train_steps': train_steps,
                            'train_loss': train_loss,
                            'validation_loss': vali_loss,
-                           'test_loss': test_loss})
+                           'test_loss': test_loss,
+                           'cost_time': cost_time})
             early_stopping(vali_loss, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
