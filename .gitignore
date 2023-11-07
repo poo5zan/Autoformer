@@ -130,3 +130,7 @@ dmypy.json
 
 dataset/
 .DS_Store
+result.txt
+checkpoints/
+results/
+test_results/
