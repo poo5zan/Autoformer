@@ -22,7 +22,7 @@ class AutoCorrelation(nn.Module):
         self.mask_flag = mask_flag
         self.output_attention = output_attention
         self.dropout = nn.Dropout(attention_dropout)
-        # self.device = torch.device("mps")
+        self.device = torch.device("cpu")
 
     def time_delay_agg_training(self, values, corr):
         """
@@ -118,6 +118,7 @@ class AutoCorrelation(nn.Module):
         res = q_fft * torch.conj(k_fft)
         corr = torch.fft.irfft(res, n=L, dim=-1)
 
+        # corr = corr.to(torch.device("mps"))
         # time delay agg
         if self.training:
             V = self.time_delay_agg_training(values.permute(0, 2, 3, 1).contiguous(), corr).permute(0, 3, 1, 2)
