@@ -26,8 +26,6 @@ def remove_directory(dir_path):
         shutil.rmtree(dir_path)
 
 def run_experiment(args: dotdict):
-    remove_directory('./checkpoints/')
-    remove_directory('./results/') 
     args.des = 'test'
     args.dropout = 0.05
     args.num_workers = 0
@@ -130,8 +128,8 @@ args.root_path = '/Users/pujanmaharjan/uni adelaide/research project/Informer/da
 args.model = 'Autoformer'
 args.data = 'custom'
 
-run_1 = False
-run_2 = True
+run_1 = True
+run_2 = False
 run_3= False
 
 error_metrics_all = []
@@ -270,7 +268,7 @@ trues = np.load('./results/'+setting+'/true.npy')
 
 plot_predictions(trues, preds, start_index=0, step=50, num_plots=6, setting = setting)
 
-def drawplots(epochs, train_loss, validation_loss, test_loss,title):
+def drawplots(epochs, train_loss, validation_loss, test_loss,title,setting):
     plt.plot(epochs, train_loss, label="train")
     plt.plot(epochs, validation_loss, label="validation")
     plt.plot(epochs, test_loss, label="test")
@@ -278,16 +276,16 @@ def drawplots(epochs, train_loss, validation_loss, test_loss,title):
     plt.legend()
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
-    plt.savefig('./dataset/' + title + '.png')
+    plt.savefig('./results/' + setting + "/" + title + '.png')
     plt.show()
 
-def drawplot(epochs, losses, title):
+def drawplot(epochs, losses, title, setting):
     plt.plot(epochs, losses)
     plt.title(title)
     plt.legend()
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
-    plt.savefig('./dataset/' + title + '.png')
+    plt.savefig('./results/' + setting + "/" + title + '.png')
     plt.show()
 
 # print(losses)
@@ -298,9 +296,9 @@ print(epochs)
 train_losses = [f['train_loss'] for f in first_loss]
 validation_losses = [f['validation_loss'] for f in first_loss]
 test_losses = [f['test_loss'] for f in first_loss]
-drawplots(epochs, train_losses, validation_losses, test_losses, 'Autoformer - Loss curves')
-drawplot(epochs, train_losses, 'Autoformer - Train loss')
-drawplot(epochs, validation_losses, 'Autoformer - Validation loss')
-drawplot(epochs, test_losses, 'Autoformer - Test loss')
+drawplots(epochs, train_losses, validation_losses, test_losses, 'Autoformer - Loss curves', setting)
+drawplot(epochs, train_losses, 'Autoformer - Train loss', setting)
+drawplot(epochs, validation_losses, 'Autoformer - Validation loss', setting)
+drawplot(epochs, test_losses, 'Autoformer - Test loss', setting)
 
 print('end')
