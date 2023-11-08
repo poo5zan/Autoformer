@@ -65,7 +65,7 @@ def run_experiment(args: dotdict):
 
     Exp = Exp_Main
 
-    # os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
     error_metrics = {}
     losses = None
@@ -201,8 +201,8 @@ def plot_predictions(trues, preds, start_index, step, num_plots, setting):
 
 
         plt.tight_layout()
-        plt.savefig('./results/'+setting+'/prediction_plot.png')
-        plt.show()
+        fig.savefig('./results/'+setting+'/prediction_plot.png')
+        plt.close(fig)
 
 def plot_graph(results_data_path):
     
@@ -272,23 +272,27 @@ trues = np.load('./results/'+setting+'/true.npy')
 plot_predictions(trues, preds, start_index=0, step=50, num_plots=6, setting = setting)
 
 def drawplots(epochs, train_loss, validation_loss, test_loss,title,setting):
-    plt.plot(epochs, train_loss, label="train")
-    plt.plot(epochs, validation_loss, label="validation")
-    plt.plot(epochs, test_loss, label="test")
-    plt.title(title)
-    plt.legend()
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.savefig('./results/' + setting + "/" + title + '.png')
-    plt.show()
+    fig, ax = plt.subplot()
+    ax.plot(epochs, train_loss, label="train")
+    ax.plot(epochs, validation_loss, label="validation")
+    ax.plot(epochs, test_loss, label="test")
+    ax.title(title)
+    ax.legend()
+    ax.xlabel('Epochs')
+    ax.ylabel('Loss')
+    fig.savefig('./results/' + setting + "/" + title + '.png')
+    plt.close(fig)
+    # plt.show()
 
 def drawplot(epochs, losses, title, setting):
-    plt.plot(epochs, losses)
-    plt.title(title)
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.savefig('./results/' + setting + "/" + title + '.png')
-    plt.show()
+    fig, ax = plt.subplot()
+    ax.plot(epochs, losses)
+    ax.title(title)
+    ax.xlabel('Epochs')
+    ax.ylabel('Loss')
+    fig.savefig('./results/' + setting + "/" + title + '.png')
+    plt.close(fig)
+    # plt.show()
 
 # print(losses)
 first_loss = losses_all[0]
