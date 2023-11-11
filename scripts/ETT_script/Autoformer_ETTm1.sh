@@ -20,7 +20,8 @@ python -u run.py \
   --c_out 7 \
   --des 'Exp' \
   --freq 't' \
-  --itr 1
+  --itr 1 \
+  --train_epochs 2
 
 python -u run.py \
   --is_training 1 \
@@ -41,7 +42,8 @@ python -u run.py \
   --c_out 7 \
   --des 'Exp' \
   --freq 't' \
-  --itr 1
+  --itr 1 \
+  --train_epochs 2
 
 python -u run.py \
   --is_training 1 \
@@ -62,7 +64,8 @@ python -u run.py \
   --c_out 7 \
   --des 'Exp' \
   --freq 't' \
-  --itr 1
+  --itr 1 \
+  --train_epochs 2
 
 python -u run.py \
   --is_training 1 \
@@ -83,7 +86,8 @@ python -u run.py \
   --c_out 7 \
   --des 'Exp' \
   --freq 't' \
-  --itr 1
+  --itr 1 \
+  --train_epochs 2
 
 python -u run.py \
   --is_training 1 \
@@ -104,4 +108,5 @@ python -u run.py \
   --c_out 7 \
   --des 'Exp' \
   --freq 't' \
-  --itr 1
+  --itr 1 \
+  --train_epochs 2
