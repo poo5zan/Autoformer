@@ -134,3 +134,4 @@ result.txt
 checkpoints/
 results/
 test_results/
+*.zip
